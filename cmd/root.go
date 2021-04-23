@@ -27,4 +27,5 @@ func AddCommands() {
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(serverCmd)
+	rootCmd.AddCommand(prometheusCmd)
 }
