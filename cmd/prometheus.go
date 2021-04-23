@@ -12,8 +12,9 @@ import (
 )
 
 type prometheusParams struct {
-	port  int
-	debug bool
+	port            int
+	connDialTimeout int
+	debug           bool
 }
 
 var prometheusparams prometheusParams
@@ -39,6 +40,7 @@ var prometheusCmd = &cobra.Command{
 
 func init() {
 	prometheusCmd.Flags().BoolVarP(&prometheusparams.debug, "debug", "d", false, "Print debugging information to the standard error")
+	prometheusCmd.Flags().IntVarP(&params.connDialTimeout, "dial-timeout", "t", 5000, "Connection dialing timeout, in ms")
 }
 
 func validatePrometheusArgs(params *prometheusParams, args []string) error {
@@ -55,5 +57,5 @@ func validatePrometheusArgs(params *prometheusParams, args []string) error {
 }
 
 func runPrometheus(params prometheusParams) {
-	promexp.RunHTTP("0.0.0.0:" + strconv.Itoa(params.port))
+	promexp.RunHTTP("0.0.0.0:"+strconv.Itoa(params.port), params.connDialTimeout)
 }

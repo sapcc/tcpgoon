@@ -40,7 +40,6 @@ var (
 			<label>Target:</label> <input type="text" name="target_ip" placeholder="X.X.X.X"><br>
 			<label>Target Port:</label> <input type="text" name="target_port" placeholder="8080"><br>
 			<label>Connection Count:</label> <input type="text" name="connections" placeholder="100"><br>
-			<label>Dial Timeout:</label> <input type="text" name="timeout" placeholder="default"><br>
 			<label>Sleep:</label> <input type="text" name="sleep" placeholder="10"><br>
 			<input type="submit" value="Submit">
 		</form>
@@ -61,7 +60,7 @@ var (
 			Help: "Number of requests with params that are not present in the config or did not pass parameter validation",
 		},
 	)
-	queryParams = [...]string{"target_ip", "target_port", "connections", "timeout", "sleep"}
+	queryParams = [...]string{"target_ip", "target_port", "connections", "sleep"}
 )
 
 func checkQueryParamsPresent(q url.Values) []error {
@@ -123,7 +122,7 @@ func handleRequestErrors(errs []error, w http.ResponseWriter) {
 	http.Error(w, errorString, 400)
 }
 
-func tcpgoonRequestHandler(w http.ResponseWriter, r *http.Request) {
+func tcpgoonRequestHandler(w http.ResponseWriter, r *http.Request, connDialTimeout int) {
 	query := r.URL.Query()
 
 	fmt.Fprintln(debugging.DebugOut, "request_param", fmt.Sprint(query), "remote", r.RemoteAddr)
@@ -145,14 +144,13 @@ func tcpgoonRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	targetPort, _ := strconv.Atoi(query.Get("target_port"))
 	connections, _ := strconv.Atoi(query.Get("connections"))
-	timeout, _ := strconv.Atoi(query.Get("timeout"))
 	sleep, _ := strconv.Atoi(query.Get("sleep"))
 
 	collector := NewCollector(
 		query.Get("target_ip"),
 		targetPort,
 		connections,
-		timeout,
+		connDialTimeout,
 		sleep,
 	)
 
@@ -165,13 +163,13 @@ func tcpgoonRequestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // RunHTTP starts a http server listening for exporter requests
-func RunHTTP(listenAddress string) {
+func RunHTTP(listenAddress string, connDialTimeout int) {
 	prometheus.MustRegister(RequestMalformedErrors)
 	prometheus.MustRegister(RequestInvalidParamsErrors)
 
 	fmt.Fprintln(debugging.DebugOut, "msg", "registering handler /tcpgoon")
 	http.HandleFunc("/tcpgoon", func(w http.ResponseWriter, r *http.Request) {
-		tcpgoonRequestHandler(w, r)
+		tcpgoonRequestHandler(w, r, connDialTimeout)
 	})
 
 	http.Handle("/metrics", promhttp.Handler())
