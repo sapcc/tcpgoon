@@ -27,6 +27,13 @@ func newMetricsCollectionStats() *metricsCollectionStats {
 	return mr
 }
 
+func (m *metricsCollectionStats) Avg() time.Duration       { return m.avg }
+func (m *metricsCollectionStats) Min() time.Duration       { return m.min }
+func (m *metricsCollectionStats) Max() time.Duration       { return m.max }
+func (m *metricsCollectionStats) Total() time.Duration     { return m.total }
+func (m *metricsCollectionStats) StdDev() time.Duration    { return m.stdDev }
+func (m *metricsCollectionStats) NumberOfConnections() int { return m.numberOfConnections }
+
 func (gc GroupOfConnections) calculateMetricsReport() (mr *metricsCollectionStats) {
 	mr = newMetricsCollectionStats()
 	if mr.numberOfConnections = len(gc.connections); mr.numberOfConnections > 0 {

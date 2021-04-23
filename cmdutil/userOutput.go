@@ -24,7 +24,7 @@ func printClosureReport(ip string, host string, port int, gc mtcpclient.GroupOfC
 
 	fmt.Println(strings.Repeat("-", 3), target+":"+strconv.Itoa(port), "tcp test statistics", strings.Repeat("-", 3))
 	mtcpclient.ReportConnectionsStatus(gc, 0)
-	fmt.Println(mtcpclient.FinalMetricsReport(gc))
+	fmt.Println(mtcpclient.NewFinalMetricsReport(gc).CliReport())
 }
 
 func AskForUserConfirmation(host string, port int, connections int) bool {

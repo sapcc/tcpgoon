@@ -32,10 +32,10 @@ func updateConcurrentEstablished(concurrentEstablished int, newConnectionStatusR
 // ReportConnectionsStatus keeps printing on screen the summary of connections states
 func ReportConnectionsStatus(gc GroupOfConnections, intervalBetweenUpdates int) {
 	for {
-		fmt.Println(gc)
 		if intervalBetweenUpdates == 0 {
 			break
 		}
+		fmt.Println(gc)
 		time.Sleep(time.Duration(intervalBetweenUpdates) * time.Second)
 	}
 }
@@ -55,22 +55,54 @@ func StartBackgroundReporting(numberConnections int, rinterval int) (chan tcpcli
 	return connStatusCh, connStatusTracker
 }
 
+type FinalMetricsReport struct {
+	establishedCons          int
+	maxConcurrentCons        int
+	establishedConsOnClosure int
+	allConnections           GroupOfConnections
+	connectionsOK            GroupOfConnections
+	connectionsError         GroupOfConnections
+}
+
+func (f *FinalMetricsReport) EstablishedCons() int          { return f.establishedCons }
+func (f *FinalMetricsReport) MaxConcurrentCons() int        { return f.maxConcurrentCons }
+func (f *FinalMetricsReport) EstablishedConsOnClosure() int { return f.establishedConsOnClosure }
+
+func NewFinalMetricsReport(gc GroupOfConnections) *FinalMetricsReport {
+	return &FinalMetricsReport{
+		establishedCons:          len(gc.getConnectionsThatWentWell(true).connections),
+		maxConcurrentCons:        gc.metrics.maxConcurrentEstablished,
+		establishedConsOnClosure: len(gc.getConnectionsThatAreOk().connections),
+		allConnections:           gc,
+		connectionsOK:            gc.getConnectionsThatWentWell(true),
+		connectionsError:         gc.getConnectionsThatWentWell(false),
+	}
+}
+
+func (fmr *FinalMetricsReport) SuccessfulConnectionReport() *metricsCollectionStats {
+	return fmr.connectionsOK.calculateMetricsReport()
+}
+
+func (fmr *FinalMetricsReport) ErrorConnectionReport() *metricsCollectionStats {
+	return fmr.connectionsError.calculateMetricsReport()
+}
+
 // FinalMetricsReport creates the final reporting summary
-func FinalMetricsReport(gc GroupOfConnections) (output string) {
+func (fmr *FinalMetricsReport) CliReport() (output string) {
 	// Report Established Connections
 	output += "--- tcpgoon execution statistics ---\n" +
 		"Total established connections: " +
-		strconv.Itoa(len(gc.getConnectionsThatWentWell(true).connections)) + "\n" +
+		strconv.Itoa(fmr.establishedCons) + "\n" +
 		"Max concurrent established connections: " +
-		strconv.Itoa(gc.metrics.maxConcurrentEstablished) + "\n" +
+		strconv.Itoa(fmr.maxConcurrentCons) + "\n" +
 		"Number of established connections on closure: " +
-		strconv.Itoa(len(gc.getConnectionsThatAreOk().connections)) + "\n"
+		strconv.Itoa(fmr.establishedConsOnClosure) + "\n"
 
-	if gc.atLeastOneConnectionOK() {
-		output += gc.getConnectionsThatWentWell(true).pingStyleReport(successfulExecution)
+	if fmr.allConnections.atLeastOneConnectionOK() {
+		output += fmr.connectionsOK.pingStyleReport(successfulExecution)
 	}
-	if gc.AtLeastOneConnectionInError() {
-		output += gc.getConnectionsThatWentWell(false).pingStyleReport(failedExecution)
+	if fmr.allConnections.AtLeastOneConnectionInError() {
+		output += fmr.connectionsError.pingStyleReport(failedExecution)
 	}
 
 	return output

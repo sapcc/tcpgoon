@@ -41,7 +41,7 @@ func TestFinalMetricsReport(t *testing.T) {
 	}
 
 	for _, test := range finalMetricsReportScenariosChecks {
-		resultingReport := FinalMetricsReport(*test.groupOfConnectionsToReport)
+		resultingReport := NewFinalMetricsReport(*test.groupOfConnectionsToReport).CliReport()
 		if resultingReport != test.expectedReport {
 			t.Error(test.scenarioDescription+", and it is:", resultingReport)
 		}
