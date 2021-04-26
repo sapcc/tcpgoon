@@ -140,7 +140,6 @@ func tcpgoonRequestHandler(w http.ResponseWriter, r *http.Request, connDialTimeo
 
 	start := time.Now()
 	registry := prometheus.NewRegistry()
-	registry.MustRegister(establishedCons, maxConcurrentCons, establishedConsOnClosure, minResponseTimeSecs, maxResponseTimeSecs, avgResponseTimeSecs, devResponseTimeSecs, invConnections)
 
 	targetPort, _ := strconv.Atoi(query.Get("target_port"))
 	connections, _ := strconv.Atoi(query.Get("connections"))
