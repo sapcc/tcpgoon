@@ -52,7 +52,7 @@ func validateTCPServerArgs(params *TCPServerParams) error {
 		return errors.New("Max Connections argument should be a positive integer")
 	}
 
-	if params.duration <= 0 {
+	if params.duration < 0 {
 		return errors.New("Duration argument should be a positive integer")
 	}
 
@@ -60,7 +60,11 @@ func validateTCPServerArgs(params *TCPServerParams) error {
 }
 
 func runTcpgoonServer(params TCPServerParams) {
-	fmt.Println("Running the simple TCP server in port", params.port, "up to", params.maxconnections, "connections or", params.duration, "seconds, what happens first")
+	if params.maxconnections == 0 && params.duration == 0 {
+		fmt.Println("Running the simple TCP server in port", params.port, "forever")
+	} else {
+		fmt.Println("Running the simple TCP server in port", params.port, "up to", params.maxconnections, "connections or", params.duration, "seconds, what happens first")
+	}
 
 	dispatcher := &tcpserver.Dispatcher{
 		Handlers: make(map[string]*tcpserver.Handler),
